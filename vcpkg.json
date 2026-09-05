@@ -1,6 +1,6 @@
 ﻿{
     "name": "inputbench",
-    "version-string": "0.1.1",
+    "version-string": "1.0.1",
     "description": "Quest-objective pointer and compass ring drawn along the Dragon's Eye Minimap frame through the Apocrypha Menu Framework HUD-widget API.",
     "homepage": "https://github.com/ApocryphaRealm/InputBench",
     "license": "MIT",

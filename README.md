@@ -1,6 +1,6 @@
 # InputBench
 
-**Version 0.1.1** (this build; there is no upstream - original code)
+**Version 1.0.1** (this build; there is no upstream - original code)
 
 Press keys, gamepad buttons and mouse buttons, and move the mouse, *inside Skyrim's own input
 dispatch* - driven from outside the game over HTTP. Every mod, every menu framework and the game
@@ -119,7 +119,7 @@ ships at the most verbose level, so it already contains every spliced event.
 
 ## WHAT CHANGED
 
-Version 0.1.1
+Version 1.0.1
 Added a relative mouse move: op "move" with dx and dy, delivered as a real mouse-move event.
-Version 0.1.0
+Version 1.0.0
 First build: keyboard, gamepad and mouse button presses spliced into the game's input dispatch, exposed as the DevBench tool bench.input.
