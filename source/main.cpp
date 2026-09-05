@@ -1,4 +1,4 @@
-// InputBench 0.1.0 - a test-only SKSE plugin that presses keys/buttons INSIDE the game's own
+// InputBench - an SKSE plugin that presses keys/buttons and moves the mouse INSIDE the game's own
 // input dispatch, so automated tests can drive ANY host (real SKSE Menu Framework included)
 // without desktop-level SendInput, which Windows' foreground lock blocks for background
 // processes. MIT, original code (the splice technique is this project's own, first shipped in
