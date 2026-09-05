@@ -61,8 +61,42 @@ namespace
 					 a_value > 0.0F ? "DOWN" : "UP", a_code, name);
 	}
 
+	// Relative mouse movement, spliced like a button. CommonLibSSE has no MouseMoveEvent::Create,
+	// so the event is built the way ButtonEvent::Create builds one: game-heap allocation, the
+	// vtable emplaced, then the fields. A framework that integrates MouseMoveEvent deltas into
+	// its own cursor (AMF does; the game recentres the OS cursor every frame) moves by exactly
+	// (dx, dy) display pixels.
+	void SpliceMouseMove(RE::InputEvent** a_events, std::int32_t a_dx, std::int32_t a_dy)
+	{
+		auto* ev = RE::malloc<RE::MouseMoveEvent>(sizeof(RE::MouseMoveEvent));
+		if (!ev)
+		{
+			logger::warn("bench.input: MouseMoveEvent allocation failed");
+			return;
+		}
+		std::memset(reinterpret_cast<void*>(ev), 0, sizeof(RE::MouseMoveEvent));
+		RE::stl::emplace_vtable<RE::MouseMoveEvent>(ev);
+		ev->device = RE::INPUT_DEVICE::kMouse;
+		ev->eventType = RE::INPUT_EVENT_TYPE::kMouseMove;
+		ev->next = nullptr;
+		ev->userEvent = RE::BSFixedString("");
+		ev->mouseInputX = a_dx;
+		ev->mouseInputY = a_dy;
+		ev->next = *a_events;
+		*a_events = ev;
+		logger::info("bench.input: spliced mouse move dx={} dy={}", a_dx, a_dy);
+	}
+
+	struct SynthMove { std::int32_t dx; std::int32_t dy; };
+	std::vector<SynthMove> g_synthMoves;
+
 	void ServiceSynthPresses(RE::InputEvent** a_events)
 	{
+		{
+			std::vector<SynthMove> moves;
+			{ std::scoped_lock lock(g_synthLock); moves.swap(g_synthMoves); }
+			for (const auto& m : moves) { SpliceMouseMove(a_events, m.dx, m.dy); }
+		}
 		std::scoped_lock l(g_synthLock);
 		for (auto it = g_synth.begin(); it != g_synth.end();)
 		{
@@ -146,6 +180,15 @@ namespace
 		else if (!deviceName.empty() && deviceName != "keyboard")
 		{
 			a_write(a_sink, "{\"ok\":false,\"error\":\"device must be keyboard|gamepad|mouse\"}");
+			return;
+		}
+		if (op == "move")
+		{
+			const long dx = JsonNum(args, "dx", 0);
+			const long dy = JsonNum(args, "dy", 0);
+			{ std::scoped_lock lock(g_synthLock); g_synthMoves.push_back(SynthMove{ static_cast<std::int32_t>(dx), static_cast<std::int32_t>(dy) }); }
+			const std::string reply = "{\"ok\":true,\"op\":\"move\",\"dx\":" + std::to_string(dx) + ",\"dy\":" + std::to_string(dy) + ",\"queued\":true}";
+			a_write(a_sink, reply.c_str());
 			return;
 		}
 		if (op != "press" || code < 0)
